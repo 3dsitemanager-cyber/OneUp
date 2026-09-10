@@ -18,7 +18,8 @@ export default async function AdminCustomersPage() {
       <header className="rounded-2xl border border-border bg-card p-6">
         <h1 className="font-display text-3xl font-bold">CUSTOMERS</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          {customers.length} accounts across studios and independent creators.
+          {customers.length} {customers.length === 1 ? "account" : "accounts"} across studios and
+          independent creators.
         </p>
       </header>
 

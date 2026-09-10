@@ -54,8 +54,8 @@ export function ComplaintForm({ productNames }: { productNames: string[] }) {
     setForm((f) => ({ ...f, [key]: value }));
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-card p-7">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="h-fit rounded-xl border border-border bg-card p-5">
+      <div className="grid gap-3 sm:grid-cols-2">
         <Field
           label="Order ID"
           placeholder="VU-4F82KD"
@@ -76,7 +76,7 @@ export function ComplaintForm({ productNames }: { productNames: string[] }) {
           <select
             value={form.product}
             onChange={(e) => set("product")(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none focus:border-primary"
+            className="mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none transition-colors focus:border-primary"
           >
             {productNames.length === 0 && <option value="">—</option>}
             {productNames.map((name) => (
@@ -89,7 +89,7 @@ export function ComplaintForm({ productNames }: { productNames: string[] }) {
           <select
             value={form.type}
             onChange={(e) => set("type")(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none focus:border-primary"
+            className="mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none transition-colors focus:border-primary"
           >
             {types.map((t) => (
               <option key={t}>{t}</option>
@@ -97,21 +97,21 @@ export function ComplaintForm({ productNames }: { productNames: string[] }) {
           </select>
         </label>
       </div>
-      <label className="mt-4 block">
+      <label className="mt-3 block">
         <Label>Description</Label>
         <textarea
           required
-          rows={6}
+          rows={4}
           minLength={10}
           value={form.description}
           onChange={(e) => set("description")(e.target.value)}
           placeholder="Describe the issue in detail..."
-          className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary"
+          className="mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary"
         />
       </label>
-      <div className="mt-4">
+      <div className="mt-3">
         <Label>Attachment (optional)</Label>
-        <div className="mt-2">
+        <div className="mt-1.5">
           <FileUpload
             kind="complaint-attachment"
             value={attachment}
@@ -123,14 +123,14 @@ export function ComplaintForm({ productNames }: { productNames: string[] }) {
       <button
         type="submit"
         disabled={submitting}
-        className="mt-6 inline-flex items-center gap-2 rounded-xl px-7 py-4 text-sm font-bold tracking-wide text-primary-foreground shadow-[0_18px_50px_-18px_var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-4 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-xs font-bold tracking-wide text-primary-foreground shadow-[0_14px_40px_-18px_var(--primary)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
         style={{ background: "var(--gradient-primary)" }}
       >
-        {submitting && <Loader2 className="size-4 animate-spin" />}
+        {submitting && <Loader2 className="size-3.5 animate-spin" />}
         {submitting ? "SUBMITTING…" : "SUBMIT COMPLAINT"}
       </button>
-      <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-        <Clock className="size-4 text-cyan" /> We usually respond within 24–48 hours.
+      <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <Clock className="size-3.5 text-cyan" /> We usually respond within 24–48 hours.
       </p>
     </form>
   );
@@ -138,7 +138,7 @@ export function ComplaintForm({ productNames }: { productNames: string[] }) {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[11px] font-bold tracking-[0.14em] text-muted-foreground">
+    <span className="font-display text-[11px] font-bold tracking-[0.14em] text-foreground">
       {String(children).toUpperCase()}
     </span>
   );
@@ -168,7 +168,7 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary"
+        className="mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary"
       />
     </label>
   );

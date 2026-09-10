@@ -5,6 +5,7 @@ import { AdminUser } from "@/models/AdminUser";
 import { adminLoginSchema } from "@/lib/validation";
 import { createSessionToken, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth";
 import { fail, handleRouteError } from "@/lib/api-response";
+import { clientIp, rateLimit } from "@/server/rate-limit";
 
 // bcrypt is a native-ish dependency — pin this handler to the Node.js runtime.
 export const runtime = "nodejs";
@@ -13,6 +14,13 @@ export const dynamic = "force-dynamic";
 /** POST /api/admin/login — issues the httpOnly admin session cookie. */
 export async function POST(request: NextRequest) {
   try {
+    // Password guessing is the obvious attack on this route, and bcrypt alone
+    // only makes each guess slow, not scarce. 10 attempts per 15 minutes.
+    const limit = rateLimit(`login:${await clientIp()}`, 10, 15 * 60 * 1000);
+    if (!limit.allowed) {
+      return fail("Too many sign-in attempts. Please wait a few minutes.", 429);
+    }
+
     const { email, password } = adminLoginSchema.parse(await request.json());
 
     await connectToDatabase();

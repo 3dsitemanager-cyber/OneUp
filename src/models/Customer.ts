@@ -13,6 +13,9 @@ const CustomerSchema = new Schema(
   { timestamps: true },
 );
 
+// The admin list is ordered by lifetime spend.
+CustomerSchema.index({ spend: -1 });
+
 export type CustomerDoc = InferSchemaType<typeof CustomerSchema> & { _id: mongoose.Types.ObjectId };
 
 export const Customer: Model<CustomerDoc> =

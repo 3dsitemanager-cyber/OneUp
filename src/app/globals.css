@@ -41,6 +41,14 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-axis: var(--chart-axis);
   /* Both variables are injected by next/font in app/layout.tsx. */
   --font-display: var(--font-space-grotesk), "Manrope", sans-serif;
   --font-sans: var(--font-inter), system-ui, sans-serif;
@@ -96,6 +104,31 @@
   );
   --shadow-glow: 0 0 0 1px var(--border), 0 20px 60px -20px oklch(0 0 0 / 16%);
   --shadow-card: 0 18px 50px -30px oklch(0 0 0 / 18%);
+
+  /* ── Data-visualisation palette ────────────────────────────────────────────
+     Categorical slots, assigned in fixed order and never cycled. Derived from
+     the brand hues (blue, red, gold, violet, green) and snapped to steps that
+     clear the a11y gates against the white card surface: every slot sits in
+     the L 0.43–0.77 band, holds chroma >= 0.10, clears 3:1 contrast, and the
+     worst adjacent pair measures ΔE 18.0 under protanopia / 22.9 unsimulated.
+     Re-run the validator before re-ordering or adding a slot. */
+  --chart-1: #1a55d8; /* brand blue   */
+  --chart-2: #e31418; /* brand red    */
+  --chart-3: #0d8ba8; /* deep cyan    */
+  --chart-4: #b57600; /* deep gold    */
+  --chart-5: #7c3aed; /* violet       */
+  --chart-6: #098926; /* green        */
+
+  /* Ordinal ramp (one hue, light → dark) for ordered buckets. Monotone in
+     lightness with >= 0.06 steps; the light end holds 2.09:1 on the surface. */
+  --chart-seq-100: #8fb3f0;
+  --chart-seq-300: #5586e4;
+  --chart-seq-500: #2a5fce;
+  --chart-seq-700: #16368a;
+
+  /* Chart chrome — recessive by design; hairline grid, muted axis ink. */
+  --chart-grid: #e6e6e3;
+  --chart-axis: #8a8a86;
 }
 
 @layer base {

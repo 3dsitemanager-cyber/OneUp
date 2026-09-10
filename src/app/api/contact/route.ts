@@ -3,13 +3,21 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { ContactMessage } from "@/models/ContactMessage";
 import { requireAdmin } from "@/server/require-admin";
 import { contactSchema } from "@/lib/validation";
-import { handleRouteError, ok } from "@/lib/api-response";
+import { fail, handleRouteError, ok } from "@/lib/api-response";
+import { serializeContactMessage } from "@/server/serialize";
+import { clientIp, rateLimit } from "@/server/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 /** POST /api/contact — stores a message from the /contact form. */
 export async function POST(request: NextRequest) {
   try {
+    // An open write endpoint: capped so the admin inbox cannot be flooded.
+    const limit = rateLimit(`contact:${await clientIp()}`, 5, 10 * 60 * 1000);
+    if (!limit.allowed) {
+      return fail("You've sent several messages already. Please wait a few minutes.", 429);
+    }
+
     const body = contactSchema.parse(await request.json());
     await connectToDatabase();
     const created = await ContactMessage.create({ ...body, email: body.email.toLowerCase() });
@@ -25,21 +33,7 @@ export async function GET() {
     await requireAdmin();
     await connectToDatabase();
     const docs = await ContactMessage.find().sort({ createdAt: -1 }).limit(200).lean().exec();
-    return ok(
-      docs.map((d) => {
-        const doc = d as Record<string, unknown>;
-        return {
-          id: String(doc["_id"]),
-          name: String(doc["name"] ?? ""),
-          email: String(doc["email"] ?? ""),
-          subject: String(doc["subject"] ?? ""),
-          message: String(doc["message"] ?? ""),
-          status: String(doc["status"] ?? "New"),
-          createdAt:
-            doc["createdAt"] instanceof Date ? doc["createdAt"].toISOString() : String(doc["createdAt"] ?? ""),
-        };
-      }),
-    );
+    return ok(docs.map((d) => serializeContactMessage(d as Record<string, unknown>)));
   } catch (error) {
     return handleRouteError(error);
   }

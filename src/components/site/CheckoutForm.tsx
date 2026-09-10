@@ -1,25 +1,43 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { CreditCard, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 
-const countries = ["Pakistan", "United States", "United Kingdom", "Germany", "Japan"];
-const methods = [
-  { id: "card", label: "Card" },
-  { id: "wallet", label: "Wallet" },
-  { id: "bank", label: "Bank" },
-] as const;
-
+const countries = [
+  "Pakistan",
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Germany",
+  "France",
+  "Netherlands",
+  "Spain",
+  "Italy",
+  "Sweden",
+  "Poland",
+  "United Arab Emirates",
+  "Saudi Arabia",
+  "India",
+  "Bangladesh",
+  "Singapore",
+  "Japan",
+  "South Korea",
+  "China",
+  "Brazil",
+  "Mexico",
+  "South Africa",
+  "Nigeria",
+  "Turkey",
+  "Other",
+];
 export function CheckoutForm() {
-  const { lines, subtotal, discount, total, clear, hydrated } = useCart();
-  const router = useRouter();
+  const { lines, subtotal, discount, total, hydrated } = useCart();
 
-  const [method, setMethod] = useState<(typeof methods)[number]["id"]>("card");
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ customerName: "", email: "", country: countries[0]! });
 
@@ -34,35 +52,25 @@ export function CheckoutForm() {
 
     setSubmitting(true);
     try {
-      // The server re-prices every line from MongoDB — this payload is a request,
-      // not the source of truth for what gets charged.
-      const res = await fetch("/api/orders", {
+      // Only slugs are sent: the server re-prices every line from MongoDB, so
+      // nothing the browser claims about price can reach Stripe.
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          paymentMethod: method,
-          items: lines.map((l) => ({
-            slug: l.slug,
-            name: l.name,
-            category: l.category,
-            image: l.image,
-            price: l.price,
-          })),
-        }),
+        body: JSON.stringify({ ...form, slugs: lines.map((l) => l.slug) }),
       });
 
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        toast.error(json.error ?? "We couldn't place that order. Please try again.");
+        toast.error(json.error ?? "We couldn't start that payment. Please try again.");
         return;
       }
 
-      clear();
-      router.push(`/checkout/success?order=${encodeURIComponent(json.data.orderId)}`);
+      // The cart is deliberately left alone until payment succeeds — the buyer
+      // may come back from Stripe having cancelled.
+      window.location.href = json.data.url as string;
     } catch {
       toast.error("Network error — check your connection and try again.");
-    } finally {
       setSubmitting(false);
     }
   }
@@ -114,39 +122,22 @@ export function CheckoutForm() {
               <h2 className="flex items-center gap-2 font-display text-lg font-bold">
                 <Lock className="size-4 text-lime" /> SECURE PAYMENT
               </h2>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                {methods.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setMethod(m.id)}
-                    className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${
-                      method === m.id
-                        ? "border-primary bg-primary/10"
-                        : "border-border text-muted-foreground"
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-              {method === "card" ? (
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <Field label="Card Number" placeholder="•••• •••• •••• ••••" />
-                  </div>
-                  <Field label="Expiry" placeholder="MM / YY" />
-                  <Field label="CVC" placeholder="•••" />
-                </div>
-              ) : (
-                <p className="mt-5 text-sm text-muted-foreground">
-                  You&apos;ll be redirected to the provider to authorise this payment securely.
-                </p>
-              )}
-              <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
-                <ShieldCheck className="size-4 text-lime" /> Card details are never sent to our
-                server — connect a payment provider before going live.
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                You&apos;ll be taken to Stripe&apos;s secure payment page to complete your purchase,
+                then brought straight back here for your downloads.
               </p>
+              <ul className="mt-5 space-y-2.5 text-sm">
+                {[
+                  "Card details are entered on Stripe — never on our servers",
+                  "Cards, Apple Pay and Google Pay all supported",
+                  "Your download links are issued the moment payment clears",
+                ].map((line) => (
+                  <li key={line} className="flex items-start gap-2 text-muted-foreground">
+                    <ShieldCheck className="mt-0.5 size-4 shrink-0 text-lime" />
+                    {line}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
@@ -191,7 +182,7 @@ export function CheckoutForm() {
             >
               {submitting ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> PLACING ORDER…
+                  <Loader2 className="size-4 animate-spin" /> REDIRECTING TO STRIPE…
                 </>
               ) : (
                 <>
@@ -199,6 +190,9 @@ export function CheckoutForm() {
                 </>
               )}
             </button>
+            <p className="mt-3 text-center text-[11px] text-muted-foreground">
+              Payments processed securely by Stripe.
+            </p>
           </aside>
         </form>
       </section>
@@ -208,7 +202,7 @@ export function CheckoutForm() {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[11px] font-bold tracking-[0.14em] text-muted-foreground">
+    <span className="font-display text-[11px] font-bold tracking-[0.14em] text-foreground">
       {String(children).toUpperCase()}
     </span>
   );

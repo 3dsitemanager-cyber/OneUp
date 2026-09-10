@@ -3,13 +3,21 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { Complaint } from "@/models/Complaint";
 import { requireAdmin } from "@/server/require-admin";
 import { complaintSchema } from "@/lib/validation";
-import { handleRouteError, ok } from "@/lib/api-response";
+import { fail, handleRouteError, ok } from "@/lib/api-response";
+import { serializeComplaint } from "@/server/serialize";
+import { clientIp, rateLimit } from "@/server/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 /** POST /api/complaints — stores a support ticket from the /complaint form. */
 export async function POST(request: NextRequest) {
   try {
+    // An open write endpoint: capped so the support queue cannot be flooded.
+    const limit = rateLimit(`complaints:${await clientIp()}`, 5, 10 * 60 * 1000);
+    if (!limit.allowed) {
+      return fail("You've submitted several reports already. Please wait a few minutes.", 429);
+    }
+
     const body = complaintSchema.parse(await request.json());
     await connectToDatabase();
     const created = await Complaint.create({
@@ -30,23 +38,7 @@ export async function GET() {
     await requireAdmin();
     await connectToDatabase();
     const docs = await Complaint.find().sort({ createdAt: -1 }).limit(200).lean().exec();
-    return ok(
-      docs.map((d) => {
-        const doc = d as Record<string, unknown>;
-        return {
-          id: String(doc["_id"]),
-          orderId: String(doc["orderId"] ?? ""),
-          email: String(doc["email"] ?? ""),
-          product: String(doc["product"] ?? ""),
-          type: String(doc["type"] ?? "Other"),
-          description: String(doc["description"] ?? ""),
-          status: String(doc["status"] ?? "Open"),
-          attachment: doc["attachment"] ?? null,
-          createdAt:
-            doc["createdAt"] instanceof Date ? doc["createdAt"].toISOString() : String(doc["createdAt"] ?? ""),
-        };
-      }),
-    );
+    return ok(docs.map((d) => serializeComplaint(d as Record<string, unknown>)));
   } catch (error) {
     return handleRouteError(error);
   }

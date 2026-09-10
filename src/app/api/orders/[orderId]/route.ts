@@ -10,9 +10,17 @@ export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ orderId: string }> };
 
-/** GET /api/orders/VU-XXXXXX — order lookup by public order id. */
+/**
+ * GET /api/orders/VU-XXXXXX — admin only.
+ *
+ * Was public, which leaked a customer's name, email, country and purchase
+ * history to anyone who guessed a six-character order id. Buyers reach their
+ * own order through POST /api/downloads/request, which also requires the email
+ * the order was placed with.
+ */
 export async function GET(_request: NextRequest, { params }: Ctx) {
   try {
+    await requireAdmin();
     const { orderId } = await params;
     await connectToDatabase();
     const doc = await Order.findOne({ orderId: orderId.toUpperCase() }).lean().exec();

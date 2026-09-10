@@ -11,6 +11,9 @@ const ContactMessageSchema = new Schema(
   { timestamps: true },
 );
 
+// Newest-first is how the inbox is always read.
+ContactMessageSchema.index({ createdAt: -1 });
+
 export type ContactMessageDoc = InferSchemaType<typeof ContactMessageSchema> & {
   _id: mongoose.Types.ObjectId;
 };

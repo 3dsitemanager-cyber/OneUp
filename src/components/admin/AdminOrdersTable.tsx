@@ -1,5 +1,6 @@
 "use client";
 
+import { Link as LinkIcon, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { formatDate, formatPrice } from "@/lib/format";
@@ -15,6 +16,26 @@ const tone: Record<OrderStatus, string> = {
 export function AdminOrdersTable({ initialOrders }: { initialOrders: Order[] }) {
   const [orders, setOrders] = useState(initialOrders);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [linkFor, setLinkFor] = useState<string | null>(null);
+
+  /** Mints a fresh 24-hour link and puts it on the clipboard for support. */
+  async function copyDownloadLink(orderId: string) {
+    setLinkFor(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/download-link`, { method: "POST" });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        toast.error(json.error ?? "Could not create a download link.");
+        return;
+      }
+      await navigator.clipboard.writeText(json.data.url);
+      toast.success("Download link copied — valid for 24 hours.");
+    } catch {
+      toast.error("Could not copy the link.");
+    } finally {
+      setLinkFor(null);
+    }
+  }
 
   const revenue = orders
     .filter((o) => o.status !== "Refunded")
@@ -61,6 +82,7 @@ export function AdminOrdersTable({ initialOrders }: { initialOrders: Order[] }) 
               <th className="px-5 py-4 font-bold">DATE</th>
               <th className="px-5 py-4 font-bold">TOTAL</th>
               <th className="px-5 py-4 font-bold">STATUS</th>
+              <th className="px-5 py-4 text-right font-bold">FILES</th>
             </tr>
           </thead>
           <tbody>
@@ -93,11 +115,31 @@ export function AdminOrdersTable({ initialOrders }: { initialOrders: Order[] }) 
                     ))}
                   </select>
                 </td>
+                <td className="px-5 py-4 text-right">
+                  {["Paid", "Delivered"].includes(o.status) ? (
+                    <button
+                      type="button"
+                      onClick={() => copyDownloadLink(o.orderId)}
+                      disabled={linkFor === o.orderId}
+                      title="Copy a 24-hour download link to send this buyer"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-bold transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+                    >
+                      {linkFor === o.orderId ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <LinkIcon className="size-3.5" />
+                      )}
+                      LINK
+                    </button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </td>
               </tr>
             ))}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">
+                <td colSpan={7} className="px-5 py-10 text-center text-muted-foreground">
                   No orders yet. Complete a checkout on the storefront and it will appear here.
                 </td>
               </tr>

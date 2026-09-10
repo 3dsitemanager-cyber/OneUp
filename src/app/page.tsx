@@ -18,12 +18,25 @@ export const metadata: Metadata = {
   },
 };
 
-// Catalogue changes in the admin panel should show up on the next request.
-export const revalidate = 0;
+// Cached for a minute: the storefront is read far more often than the
+// catalogue changes, so most visitors get HTML without touching the database.
+// An admin edit appears within 60s rather than instantly — the trade for not
+// re-querying Atlas on every page view.
+export const revalidate = 60;
 
 export default async function HomePage() {
-  const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-  const justDropped = [...products].sort((a, b) => Number(b.isNew) - Number(a.isNew)).slice(0, 4);
+  // Only categories that actually have listings — an empty tile leads nowhere.
+  //
+  // Bounded and card-shaped rather than the whole catalogue. The bound is
+  // generous because FeaturedGrid filters these by category in the browser: too
+  // low and a category tab would look empty while /models still lists the
+  // items. If the catalogue outgrows this, that tab filter should move server-
+  // side rather than the number creeping up.
+  const [products, justDropped, categories] = await Promise.all([
+    getProducts({ listOnly: true, limit: 48 }),
+    getProducts({ sort: "Newest", listOnly: true, limit: 4 }),
+    getCategories({ onlyWithProducts: true }),
+  ]);
 
   return (
     <main className="overflow-hidden">
@@ -91,16 +104,13 @@ export default async function HomePage() {
               EXPLORE ALL ASSETS <ArrowRight className="size-4" />
             </Link>
           </div>
-          <div
-            className="relative flex aspect-[7/5] items-center justify-center overflow-hidden rounded-3xl p-10"
-            style={{ background: "var(--gradient-nav)" }}
-          >
+          <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-border shadow-[0_24px_60px_-28px_rgba(11,24,54,0.7)]">
             <Image
-              src="/assets/logo.png"
-              alt="OneUp Gaming"
-              width={320}
-              height={320}
-              className="h-full w-auto object-contain drop-shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
+              src="/assets/monster.jpg"
+              alt="Game-ready monster truck 3D asset"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
             />
           </div>
         </div>

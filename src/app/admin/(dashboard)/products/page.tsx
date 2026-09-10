@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getProducts } from "@/server/queries";
+import { getProductsForAdmin } from "@/server/queries";
 import { AdminProductsTable } from "@/components/admin/AdminProductsTable";
 
 export const metadata: Metadata = {
@@ -11,6 +11,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
-  const products = await getProducts();
+  const products = await getProductsForAdmin();
   return <AdminProductsTable initialProducts={products} />;
 }

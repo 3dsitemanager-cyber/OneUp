@@ -24,6 +24,11 @@ type ProductSeed = {
   fileSize: string;
   software: string[];
   features: string[];
+  highlights: string[];
+  license: string;
+  licenseTerms: string;
+  delivery: string;
+  uvs: string;
 };
 
 type CategorySeed = { name: CategoryName; slug: string; count: number; image: string; order: number };
@@ -48,6 +53,13 @@ const base = {
   textures: "4096 x 4096 PBR",
   fileSize: "184 MB",
   software: ["Blender", "Unity", "Unreal Engine", "Maya"],
+  // Detail-page copy — editable per product from the admin form.
+  highlights: ["4K TEXTURES", "PBR MATERIALS", "GAME READY", "RIGGED"],
+  license: "Standard commercial",
+  licenseTerms:
+    "Use this asset in unlimited personal and commercial game projects. Redistribution or resale of the source files, on their own or as part of an asset pack, is not permitted.",
+  delivery: "Instant secure download",
+  uvs: "Non-overlapping, packed",
 };
 
 export const productSeed: ProductSeed[] = [
@@ -207,10 +219,8 @@ export const categorySeed: CategorySeed[] = [
   { name: "Creatures", slug: "creatures", count: 68, image: creature, order: 6 },
 ];
 
-export const customerSeed: CustomerSeed[] = [
-  { name: "Alex Mercer", email: "alex@studio.com", orders: 12, spend: 384, plan: "Studio" },
-  { name: "Sara Khan", email: "sara@pixelforge.io", orders: 8, spend: 246, plan: "Indie" },
-  { name: "Kenji Ito", email: "kenji@nightowl.jp", orders: 21, spend: 902, plan: "Studio" },
-  { name: "Mila Novak", email: "mila@voxelworks.eu", orders: 4, spend: 118, plan: "Indie" },
-  { name: "Tom Reed", email: "tom@reedgames.co", orders: 15, spend: 571, plan: "Pro" },
-];
+/**
+ * Intentionally empty. Customer records are created by real checkouts, so
+ * seeding them would show people who never bought anything in the admin list.
+ */
+export const customerSeed: CustomerSeed[] = [];

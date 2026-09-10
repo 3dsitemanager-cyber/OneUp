@@ -45,15 +45,20 @@ export function Navbar() {
   }, [productsOpen]);
 
   // Categories are admin-managed, so the submenu is fetched rather than hardcoded.
+  // withProducts=1: only categories that actually have listings, with real counts.
+  // Kept fresh rather than cached: the header persists across navigation, so a
+  // stale window here shows renamed or emptied categories long after the edit.
   const { data: categories = [] } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories", "withProducts"],
     queryFn: async (): Promise<Category[]> => {
-      const res = await fetch("/api/categories");
+      const res = await fetch("/api/categories?withProducts=1");
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error ?? "Could not load categories");
       return json.data as Category[];
     },
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   // The admin portal has its own chrome — keep the storefront header out of it.

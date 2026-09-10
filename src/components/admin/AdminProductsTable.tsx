@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { ExternalLink, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
@@ -126,6 +126,20 @@ export function AdminProductsTable({ initialProducts }: { initialProducts: Produ
                       <Image src={p.image} alt={p.name} fill sizes="40px" className="object-cover" />
                     </div>
                     <span className="font-semibold">{p.name}</span>
+                    {!p.published && (
+                      <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-[10px] font-bold tracking-wide text-muted-foreground">
+                        DRAFT
+                      </span>
+                    )}
+                    {/* Without an archive a buyer pays and receives nothing. */}
+                    {!p.assetFile && (
+                      <span
+                        title="No downloadable file attached — buyers will have nothing to download."
+                        className="rounded-full border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-destructive"
+                      >
+                        NO FILE
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="px-5 py-4 text-muted-foreground">{p.category}</td>
@@ -133,6 +147,13 @@ export function AdminProductsTable({ initialProducts }: { initialProducts: Produ
                 <td className="px-5 py-4 text-muted-foreground">{p.sales}</td>
                 <td className="px-5 py-4">
                   <div className="flex justify-end gap-2">
+                    <Link
+                      href={`/admin/products/${p.slug}/edit`}
+                      aria-label={`Edit ${p.name}`}
+                      className="flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-brand"
+                    >
+                      <Pencil className="size-4" />
+                    </Link>
                     <Link
                       href={`/models/${p.slug}`}
                       target="_blank"

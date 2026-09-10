@@ -4,6 +4,7 @@ import { requireAdmin } from "@/server/require-admin";
 import { createSignedUpload } from "@/server/uploads";
 import { UPLOAD_KINDS, UPLOAD_KIND_NAMES, validateFile } from "@/lib/upload-policy";
 import { fail, handleRouteError, ok } from "@/lib/api-response";
+import { clientIp, rateLimit } from "@/server/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +29,13 @@ export async function POST(request: NextRequest) {
 
     if (UPLOAD_KINDS[kind].adminOnly) {
       await requireAdmin();
+    } else {
+      // Support attachments are public by design, so cap how many signatures
+      // one address can obtain — otherwise the Cloudinary quota is the limit.
+      const limit = rateLimit(`upload-sign:${await clientIp()}`, 20, 10 * 60 * 1000);
+      if (!limit.allowed) {
+        return fail("Too many uploads. Please wait a few minutes.", 429);
+      }
     }
 
     const problem = validateFile(kind, { name: body.filename, size: body.bytes });

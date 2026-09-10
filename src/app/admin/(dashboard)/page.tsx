@@ -1,7 +1,21 @@
 import type { Metadata } from "next";
-import { DollarSign, Download, Package, Receipt } from "lucide-react";
+import Link from "next/link";
+import {
+  DollarSign,
+  Download,
+  LifeBuoy,
+  Mail,
+  Package,
+  Receipt,
+  ShoppingCart,
+  Users,
+} from "lucide-react";
 import { getDashboardStats } from "@/server/queries";
 import { formatPrice } from "@/lib/format";
+import { StatTile } from "@/components/admin/StatTile";
+import { RevenueChart } from "@/components/admin/RevenueChart";
+import { CategoryChart } from "@/components/admin/CategoryChart";
+import { OrderStatusChart } from "@/components/admin/OrderStatusChart";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard — OneUp Gaming",
@@ -15,11 +29,64 @@ export default async function AdminDashboardPage() {
   const stats = await getDashboardStats();
   const max = stats.topAssets[0]?.value || 1;
 
+  // The sparkline shows shape, so it takes the tail of the same 30-day series.
+  const spark = stats.revenueSeries.slice(-12).map((d) => d.revenue);
+
   const tiles = [
-    { icon: DollarSign, label: "REVENUE", value: formatPrice(stats.revenue) },
-    { icon: Download, label: "DOWNLOADS", value: stats.downloads.toLocaleString("en-US") },
-    { icon: Package, label: "LIVE ASSETS", value: String(stats.liveAssets) },
-    { icon: Receipt, label: "ORDERS", value: String(stats.orderCount) },
+    {
+      icon: DollarSign,
+      label: "REVENUE",
+      value: formatPrice(stats.revenue),
+      trend: stats.trends.revenue,
+      spark,
+    },
+    {
+      icon: Receipt,
+      label: "ORDERS",
+      value: stats.orderCount.toLocaleString("en-US"),
+      trend: stats.trends.orders,
+    },
+    {
+      icon: ShoppingCart,
+      label: "AVG ORDER",
+      value: formatPrice(stats.trends.avgOrderValue.current),
+      trend: stats.trends.avgOrderValue,
+    },
+    {
+      icon: Users,
+      label: "BUYERS (30D)",
+      value: stats.trends.customers.current.toLocaleString("en-US"),
+      trend: stats.trends.customers,
+    },
+    {
+      icon: Download,
+      label: "DOWNLOADS",
+      value: stats.downloads.toLocaleString("en-US"),
+    },
+    {
+      icon: Package,
+      label: "LIVE ASSETS",
+      value: String(stats.liveAssets),
+    },
+  ];
+
+  const inbox = [
+    {
+      icon: Mail,
+      label: "MESSAGES",
+      href: "/admin/messages",
+      count: stats.unreadMessages,
+      pending: "unread messages waiting for a reply",
+      empty: "No unread messages.",
+    },
+    {
+      icon: LifeBuoy,
+      label: "SUPPORT",
+      href: "/admin/complaints",
+      count: stats.openComplaints,
+      pending: "tickets still open or in review",
+      empty: "No open tickets.",
+    },
   ];
 
   return (
@@ -31,25 +98,50 @@ export default async function AdminDashboardPage() {
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {tiles.map((s) => (
-          <div
+          <StatTile
             key={s.label}
-            className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-28px_var(--brand-blue)]"
+            icon={s.icon}
+            label={s.label}
+            value={s.value}
+            {...(s.trend ? { trend: s.trend } : {})}
+            {...(s.spark ? { spark: s.spark } : {})}
+          />
+        ))}
+      </div>
+
+      <RevenueChart series={stats.revenueSeries} />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <CategoryChart rows={stats.categorySplit} />
+        <OrderStatusChart rows={stats.statusSplit} payments={stats.paymentSplit} />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {inbox.map((i) => (
+          <Link
+            key={i.label}
+            href={i.href}
+            className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-brand"
           >
-            <div className="flex items-center gap-3">
-              <span
-                className="flex size-10 shrink-0 items-center justify-center rounded-xl text-white"
-                style={{ background: "var(--gradient-nav)" }}
-              >
-                <s.icon className="size-4" />
-              </span>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted-foreground">
+              <i.icon className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
               <p className="text-[11px] font-bold tracking-[0.16em] text-muted-foreground">
-                {s.label}
+                {i.label}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {i.count > 0 ? i.pending : i.empty}
               </p>
             </div>
-            <p className="mt-3 font-display text-3xl font-bold text-brand">{s.value}</p>
-          </div>
+            {i.count > 0 && (
+              <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-display text-sm font-bold text-primary">
+                {i.count}
+              </span>
+            )}
+          </Link>
         ))}
       </div>
 

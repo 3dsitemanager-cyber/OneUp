@@ -12,7 +12,8 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 0;
+// See the note on the homepage: cached for a minute, not per request.
+export const revalidate = 60;
 
 export default async function ModelsPage({
   searchParams,
@@ -23,12 +24,12 @@ export default async function ModelsPage({
   const initialCategory = category ?? "All";
 
   const [categories, initialProducts] = await Promise.all([
-    getCategories(),
-    getProducts({ category: initialCategory }),
+    getCategories({ onlyWithProducts: true }),
+    getProducts({ category: initialCategory, listOnly: true }),
   ]);
 
   return (
-    <main className="pt-28">
+    <main className="pt-24">
       <ModelsBrowser
         categories={categories}
         initialProducts={initialProducts}

@@ -148,6 +148,32 @@ export async function listStoredFiles(limit = 60): Promise<StoredFile[]> {
   );
 }
 
+/**
+ * A short-lived Cloudinary URL that forces a download with the original
+ * filename. `private_download_url` is signed with the API secret and carries
+ * its own expiry, so the link stops working on its own and cannot be shared
+ * indefinitely.
+ *
+ * Note: a plain signed delivery URL (res.cloudinary.com) would start faster,
+ * but these archives are stored with a non-public access mode and answer 401
+ * there — verified. Switching hosts therefore needs the upload type changed
+ * first, so this stays on the endpoint that actually authorises.
+ */
+export function createAssetDownloadUrl(
+  publicId: string,
+  format: string,
+  resourceType = "raw",
+  ttlSeconds = 15 * 60,
+): string {
+  const cld = getCloudinary();
+
+  return cld.utils.private_download_url(publicId, format, {
+    resource_type: resourceType,
+    type: "upload",
+    expires_at: Math.floor(Date.now() / 1000) + ttlSeconds,
+  });
+}
+
 export class UploadRejectedError extends Error {
   constructor(message: string) {
     super(message);

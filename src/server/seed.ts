@@ -19,9 +19,8 @@ import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
 import { Category } from "@/models/Category";
-import { Customer } from "@/models/Customer";
 import { AdminUser } from "@/models/AdminUser";
-import { categorySeed, customerSeed, productSeed } from "@/server/seed-data";
+import { categorySeed, productSeed } from "@/server/seed-data";
 
 async function seed() {
   console.log("→ Connecting to MongoDB Atlas…");
@@ -46,17 +45,9 @@ async function seed() {
     `✓ Categories — ${categoryResult.upsertedCount} inserted, ${categoryResult.modifiedCount} updated`,
   );
 
-  const customerResult = await Customer.bulkWrite(
-    customerSeed.map((c) => ({
-      updateOne: {
-        filter: { email: c.email.toLowerCase() },
-        // $setOnInsert only: never overwrite live spend/order totals on re-seed.
-        update: { $setOnInsert: { ...c, email: c.email.toLowerCase() } },
-        upsert: true,
-      },
-    })),
-  );
-  console.log(`✓ Customers — ${customerResult.upsertedCount} inserted`);
+  // Customers are NOT seeded. A customer record is created by a real checkout,
+  // so inventing them would put people who never bought anything in the admin
+  // list and inflate the dashboard's buyer and revenue figures.
 
   const email = (process.env.ADMIN_EMAIL ?? "admin@oneupgaming.studio").toLowerCase();
   const password = process.env.ADMIN_PASSWORD;

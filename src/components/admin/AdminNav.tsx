@@ -6,7 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Images,
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
+  Mail,
   Package,
   PlusCircle,
   Receipt,
@@ -18,10 +20,20 @@ import { toast } from "sonner";
 
 const nav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/products", label: "Products", icon: Package, exact: true },
+  // Products also owns /admin/products/[slug]/edit, but not /admin/products/new,
+  // which is its own entry below — hence the explicit predicate.
+  {
+    href: "/admin/products",
+    label: "Products",
+    icon: Package,
+    exact: false,
+    isActive: (p: string) => p === "/admin/products" || p.endsWith("/edit"),
+  },
   { href: "/admin/products/new", label: "Add Product", icon: PlusCircle, exact: false },
   { href: "/admin/orders", label: "Orders", icon: Receipt, exact: false },
   { href: "/admin/customers", label: "Customers", icon: Users, exact: false },
+  { href: "/admin/messages", label: "Messages", icon: Mail, exact: false },
+  { href: "/admin/complaints", label: "Support", icon: LifeBuoy, exact: false },
   { href: "/admin/media", label: "Media", icon: Images, exact: false },
 ] as const;
 
@@ -65,7 +77,12 @@ export function AdminNav({ email }: { email: string }) {
 
       <nav className="mt-4 space-y-1 px-3">
         {nav.map((n) => {
-          const active = n.exact ? pathname === n.href : pathname.startsWith(n.href);
+          const active =
+            "isActive" in n
+              ? n.isActive(pathname)
+              : n.exact
+                ? pathname === n.href
+                : pathname.startsWith(n.href);
           return (
             <Link
               key={n.href}

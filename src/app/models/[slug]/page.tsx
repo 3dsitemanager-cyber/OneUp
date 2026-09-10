@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getProductBySlug, getRelatedProducts } from "@/server/queries";
 import { ProductDetail } from "@/components/site/ProductDetail";
 
-export const revalidate = 0;
+// See the note on the homepage: cached for a minute, not per request.
+export const revalidate = 60;
 
 type Props = { params: Promise<{ slug: string }> };
 

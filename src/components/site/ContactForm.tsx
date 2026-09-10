@@ -42,9 +42,12 @@ export function ContactForm() {
     setForm((f) => ({ ...f, [key]: value }));
 
   return (
-    <form onSubmit={handleSubmit} className="h-fit rounded-2xl border border-border bg-card p-7">
-      <h2 className="font-display text-lg font-bold">SEND A MESSAGE</h2>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+    <form
+      onSubmit={handleSubmit}
+      className="h-fit rounded-xl border border-border bg-card p-5 lg:sticky lg:top-24"
+    >
+      <h2 className="font-display text-sm font-bold tracking-wide">SEND A MESSAGE</h2>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Field label="Name" placeholder="Alex Mercer" required value={form.name} onChange={set("name")} />
         <Field
           label="Email"
@@ -64,31 +67,31 @@ export function ContactForm() {
           />
         </div>
       </div>
-      <label className="mt-4 block">
+      <label className="mt-3 block">
         <Label>Message</Label>
         <textarea
           required
-          rows={7}
+          rows={4}
           minLength={10}
           value={form.message}
           onChange={(e) => set("message")(e.target.value)}
           placeholder="Tell us about your project..."
-          className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary"
+          className="mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary"
         />
       </label>
       <button
         type="submit"
         disabled={submitting}
-        className="mt-6 inline-flex items-center gap-2 rounded-xl px-7 py-4 text-sm font-bold tracking-wide text-primary-foreground shadow-[0_18px_50px_-18px_var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-4 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-xs font-bold tracking-wide text-primary-foreground shadow-[0_14px_40px_-18px_var(--primary)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
         style={{ background: "var(--gradient-primary)" }}
       >
         {submitting ? (
           <>
-            <Loader2 className="size-4 animate-spin" /> SENDING…
+            <Loader2 className="size-3.5 animate-spin" /> SENDING…
           </>
         ) : (
           <>
-            SEND MESSAGE <ArrowRight className="size-4" />
+            SEND MESSAGE <ArrowRight className="size-3.5" />
           </>
         )}
       </button>
@@ -98,7 +101,7 @@ export function ContactForm() {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[11px] font-bold tracking-[0.14em] text-muted-foreground">
+    <span className="font-display text-[11px] font-bold tracking-[0.14em] text-foreground">
       {String(children).toUpperCase()}
     </span>
   );
@@ -128,7 +131,7 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary"
+        className="mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary"
       />
     </label>
   );

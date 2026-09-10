@@ -29,6 +29,9 @@ const ComplaintSchema = new Schema(
   { timestamps: true },
 );
 
+// Newest-first is how the support queue is always read.
+ComplaintSchema.index({ createdAt: -1 });
+
 export type ComplaintDoc = InferSchemaType<typeof ComplaintSchema> & {
   _id: mongoose.Types.ObjectId;
 };

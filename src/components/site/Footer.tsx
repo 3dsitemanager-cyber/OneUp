@@ -3,22 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Github, Instagram, Twitter, Youtube } from "lucide-react";
+import type { Category } from "@/lib/types";
 
 const columns: { title: string; links: { label: string; href: string }[] }[] = [
   {
-    title: "Marketplace",
-    links: [
-      { label: "All Models", href: "/models" },
-      { label: "Characters", href: "/models?category=Characters" },
-      { label: "Environments", href: "/models?category=Environments" },
-      { label: "Props", href: "/models?category=Props" },
-      { label: "Vehicles", href: "/models?category=Vehicles" },
-    ],
-  },
-  {
     title: "Support",
     links: [
+      { label: "Your Downloads", href: "/downloads" },
       { label: "Contact", href: "/contact" },
       { label: "Complaints", href: "/complaint" },
       { label: "FAQ", href: "/about" },
@@ -38,6 +31,34 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
 
 export function Footer() {
   const pathname = usePathname();
+
+  // Marketplace column is built from live categories that have listings.
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories", "withProducts"],
+    queryFn: async (): Promise<Category[]> => {
+      const res = await fetch("/api/categories?withProducts=1");
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error ?? "Could not load categories");
+      return json.data as Category[];
+    },
+    // Shares its cache entry with the header — see Navbar for why it stays fresh.
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+
+  const marketplace = {
+    title: "Marketplace",
+    links: [
+      { label: "All Models", href: "/models" },
+      ...categories.map((c) => ({
+        label: c.name,
+        href: `/models?category=${encodeURIComponent(c.name)}`,
+      })),
+    ],
+  };
+
+  const allColumns = [marketplace, ...columns];
+
   if (pathname.startsWith("/admin")) return null;
 
   return (
@@ -77,7 +98,7 @@ export function Footer() {
           </div>
         </div>
 
-        {columns.map((col) => (
+        {allColumns.map((col) => (
           <div key={col.title}>
             <h4 className="flex items-center gap-2 text-xs font-bold tracking-[0.18em] text-white">
               <span className="h-4 w-1 rounded-full bg-primary" />

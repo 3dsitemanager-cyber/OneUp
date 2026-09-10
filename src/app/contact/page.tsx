@@ -20,35 +20,35 @@ const channels = [
 
 export default function ContactPage() {
   return (
-    <main className="pt-28">
+    <main className="pt-24">
       <section className="relative">
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[1fr_1.1fr]">
+        <div className="relative mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1fr_1.1fr]">
           <div>
-            <h1 className="font-display text-4xl font-bold sm:text-5xl">LET&apos;S TALK</h1>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+            <h1 className="font-display text-2xl font-bold sm:text-3xl">LET&apos;S TALK</h1>
+            <p className="mt-2 max-w-md text-xs leading-relaxed text-muted-foreground">
               Questions about licensing, custom asset commissions or studio bundles? Our team answers
               every message personally.
             </p>
-            <div className="mt-8 space-y-4">
+            <div className="mt-5 space-y-2.5">
               {channels.map((c) => (
                 <div
                   key={c.title}
-                  className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/40"
                 >
-                  <span className="flex size-11 items-center justify-center rounded-xl border border-border bg-surface text-primary">
-                    <c.icon className="size-4" />
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-primary">
+                    <c.icon className="size-3.5" />
                   </span>
-                  <div>
-                    <p className="text-[11px] tracking-[0.16em] text-muted-foreground">{c.title}</p>
-                    <p className="font-display text-sm font-bold">{c.value}</p>
+                  <div className="min-w-0">
+                    <p className="text-[10px] tracking-[0.16em] text-muted-foreground">{c.title}</p>
+                    <p className="truncate font-display text-xs font-bold">{c.value}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="relative mt-8 hidden aspect-[7/5] overflow-hidden rounded-2xl border border-border lg:block">
+            <div className="relative mt-5 hidden aspect-[4/3] overflow-hidden rounded-xl border border-border lg:block">
               <Image
-                src="/assets/hero-3d.jpg"
-                alt="3D asset composition"
+                src="/assets/monster-surf.jpg"
+                alt="Stylised monster truck 3D asset"
                 fill
                 sizes="50vw"
                 className="object-cover"

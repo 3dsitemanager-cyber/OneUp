@@ -13,7 +13,8 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 0;
+// See the note on the homepage: cached for a minute, not per request.
+export const revalidate = 60;
 
 const guides = [
   ["DOWNLOAD ISSUES", "Expired links are re-issued automatically from your order page."],
@@ -22,32 +23,33 @@ const guides = [
 ];
 
 export default async function ComplaintPage() {
-  const products = await getProducts();
+  // Only the names reach the form's dropdown, so don't fetch whole documents.
+  const products = await getProducts({ listOnly: true });
 
   return (
-    <main className="pt-28">
+    <main className="pt-24">
       <section className="relative border-b border-border">
-        <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8">
-          <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.2em] text-primary">
-            <LifeBuoy className="size-3.5" /> SUPPORT
+        <div className="relative mx-auto max-w-6xl px-5 py-8 sm:px-8">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.2em] text-primary">
+            <LifeBuoy className="size-3" /> SUPPORT
           </span>
-          <h1 className="mt-4 font-display text-4xl font-bold sm:text-5xl">
+          <h1 className="mt-2 font-display text-2xl font-bold sm:text-3xl">
             NEED HELP WITH AN ORDER?
           </h1>
-          <p className="mt-3 max-w-xl text-sm text-muted-foreground">
+          <p className="mt-1.5 max-w-xl text-xs text-muted-foreground">
             Tell us what went wrong and our support team will review your request.
           </p>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 lg:grid-cols-[1.6fr_1fr]">
+      <section className="mx-auto grid max-w-6xl gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[1.6fr_1fr]">
         <ComplaintForm productNames={products.map((p) => p.name)} />
 
-        <aside className="h-fit space-y-4">
+        <aside className="h-fit space-y-3 lg:sticky lg:top-24">
           {guides.map(([t, d]) => (
-            <div key={t} className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="font-display text-sm font-bold tracking-wide">{t}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d}</p>
+            <div key={t} className="rounded-xl border border-border bg-card p-4">
+              <h2 className="font-display text-xs font-bold tracking-wide">{t}</h2>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{d}</p>
             </div>
           ))}
         </aside>

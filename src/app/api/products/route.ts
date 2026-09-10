@@ -15,7 +15,9 @@ export async function GET(request: NextRequest) {
     const query = productQuerySchema.parse(
       Object.fromEntries(request.nextUrl.searchParams.entries()),
     );
-    const products = await getProducts(query);
+    // This feeds the /models grid, which renders cards — the heavy prose fields
+    // would be shipped to every browser and never read.
+    const products = await getProducts({ ...query, listOnly: true });
     return ok(products);
   } catch (error) {
     return handleRouteError(error);

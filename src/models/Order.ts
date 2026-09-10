@@ -28,9 +28,19 @@ const OrderSchema = new Schema(
     total: { type: Number, required: true, min: 0 },
     paymentMethod: { type: String, enum: ["card", "wallet", "bank"], default: "card" },
     status: { type: String, enum: ORDER_STATUSES, default: "Paid", index: true },
+    // Stripe's ids for this purchase. `sparse` so orders created outside Stripe
+    // (seeds, manual entries) don't all collide on a null unique key; `unique`
+    // so a replayed webhook can never write the same session twice.
+    stripeSessionId: { type: String, index: true, unique: true, sparse: true },
+    stripePaymentIntentId: { type: String, index: true, sparse: true },
   },
   { timestamps: true },
 );
+
+// Every admin listing and the dashboard's revenue windows sort or range over
+// createdAt; without this each one is a collection scan plus an in-memory sort.
+OrderSchema.index({ createdAt: -1 });
+OrderSchema.index({ status: 1, createdAt: -1 });
 
 export type OrderDoc = InferSchemaType<typeof OrderSchema> & { _id: mongoose.Types.ObjectId };
 

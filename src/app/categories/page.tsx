@@ -15,10 +15,11 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 0;
+// See the note on the homepage: cached for a minute, not per request.
+export const revalidate = 60;
 
 export default async function CategoriesPage() {
-  const categories = await getCategories();
+  const categories = await getCategories({ onlyWithProducts: true });
 
   return (
     <main className="pt-28">

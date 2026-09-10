@@ -96,7 +96,8 @@ src/
 │   ├── contact/  complaint/    Forms that POST to the API
 │   ├── admin/
 │   │   ├── login/              The only login page in the app
-│   │   └── (dashboard)/        Protected portal — dashboard, products, orders, customers
+│   │   └── (dashboard)/        Protected portal — dashboard, products (add/edit),
+│   │                           orders, customers, messages, support, media
 │   └── api/                    ← all Route Handlers
 ├── components/
 │   ├── site/                   Storefront components
@@ -142,7 +143,11 @@ All responses are `{ ok: true, data }` or `{ ok: false, error }`.
 | PATCH  | `/api/orders/[orderId]`   | Change order status            |
 | GET    | `/api/customers`          | Customer rollups               |
 | GET    | `/api/contact`            | Contact inbox                  |
+| PATCH  | `/api/contact/[id]`       | Change message status          |
+| DELETE | `/api/contact/[id]`       | Delete a message               |
 | GET    | `/api/complaints`         | Complaint queue                |
+| PATCH  | `/api/complaints/[id]`    | Change ticket status           |
+| DELETE | `/api/complaints/[id]`    | Delete a ticket                |
 | POST   | `/api/seed`               | Re-apply the starter catalogue |
 | GET    | `/api/upload`             | Media library listing          |
 | POST   | `/api/upload`             | Upload via this server         |
