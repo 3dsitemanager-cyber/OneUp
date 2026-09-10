@@ -21,7 +21,25 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+/**
+ * Absolute base for canonical and OG URLs.
+ *
+ * `??` alone is not enough: an env var that exists but is empty (easy to do in
+ * a hosting dashboard) is a string, not undefined, and `new URL("")` throws
+ * during the build rather than at request time. Falls back to the URL the host
+ * assigns — Vercel sets VERCEL_URL without a scheme — and finally to localhost.
+ */
+function resolveSiteUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+
+  const vercel = process.env.VERCEL_URL?.trim();
+  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "")}`;
+
+  return "http://localhost:3000";
+}
+
+const siteUrl = resolveSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

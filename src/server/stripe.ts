@@ -50,11 +50,15 @@ export function stripeConfigured(): boolean {
  * environment — localhost in development, the live domain in production.
  */
 export function siteUrl(): string {
-  const value = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!value) {
-    throw new Error("NEXT_PUBLIC_SITE_URL is not set — Stripe needs an absolute return URL.");
-  }
-  return value.replace(/\/+$/, "");
+  // Trimmed, because an env var set to an empty string is still a string.
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+
+  // Vercel exposes the deployment host without a scheme.
+  const vercel = process.env.VERCEL_URL?.trim();
+  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "")}`;
+
+  throw new Error("NEXT_PUBLIC_SITE_URL is not set — Stripe needs an absolute return URL.");
 }
 
 /** Stripe works in the smallest currency unit; USD prices are stored as dollars. */
