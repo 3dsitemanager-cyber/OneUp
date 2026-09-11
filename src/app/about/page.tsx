@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "About OneUp Gaming — Premium 3D Asset Studio & Marketplace",
   description:
     "OneUp Gaming builds and curates production-ready 3D game assets for studios and independent creators.",
+  alternates: { canonical: "/about" },
   openGraph: {
     title: "About OneUp Gaming",
     description: "The studio behind the OneUp Gaming 3D asset library.",

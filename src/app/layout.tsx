@@ -6,6 +6,8 @@ import { Providers } from "./providers";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { Toaster } from "@/components/ui/sonner";
+import { getSiteUrl } from "@/lib/site-url";
+import { SiteStructuredData } from "@/components/site/StructuredData";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,25 +23,7 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-/**
- * Absolute base for canonical and OG URLs.
- *
- * `??` alone is not enough: an env var that exists but is empty (easy to do in
- * a hosting dashboard) is a string, not undefined, and `new URL("")` throws
- * during the build rather than at request time. Falls back to the URL the host
- * assigns — Vercel sets VERCEL_URL without a scheme — and finally to localhost.
- */
-function resolveSiteUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/+$/, "");
-
-  const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "")}`;
-
-  return "http://localhost:3000";
-}
-
-const siteUrl = resolveSiteUrl();
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -68,6 +52,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body>
+        {/* Sitewide identity for search engines — see StructuredData. */}
+        <SiteStructuredData />
         <Providers>
           <Navbar />
           {children}

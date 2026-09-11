@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   title: "OneUp Gaming — Premium 3D Game Assets & Models Marketplace",
   description:
     "Buy premium game-ready 3D models: characters, weapons, vehicles, environments and props. 4K PBR textures, FBX/BLEND/OBJ, instant download.",
+  alternates: { canonical: "/" },
   openGraph: {
     title: "OneUp Gaming — Premium 3D Game Assets Marketplace",
     description: "Production-ready 3D assets for modern games. Instant digital delivery.",

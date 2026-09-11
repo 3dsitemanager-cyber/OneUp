@@ -66,9 +66,15 @@ export function CheckoutForm() {
         return;
       }
 
-      // The cart is deliberately left alone until payment succeeds — the buyer
-      // may come back from Stripe having cancelled.
-      window.location.href = json.data.url as string;
+      // Same tab, deliberately: the buyer should be able to use Back to return
+      // to the cart, and a popup would be blocked after this await anyway.
+      //
+      // The cart is left alone until payment succeeds — the buyer may come back
+      // from Stripe having cancelled.
+      window.location.assign(json.data.url as string);
+      // Not clearing `submitting`: the page is navigating away, and re-enabling
+      // the button invites a second session being created mid-navigation.
+      return;
     } catch {
       toast.error("Network error — check your connection and try again.");
       setSubmitting(false);

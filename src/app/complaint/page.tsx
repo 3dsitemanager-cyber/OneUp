@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Order Support & Complaints — OneUp Gaming",
   description:
     "Report a download problem, corrupted file, payment or license issue with your OneUp Gaming order.",
+  alternates: { canonical: "/complaint" },
   openGraph: {
     title: "Order Support — OneUp Gaming",
     description: "Our team reviews order issues within 24–48 hours.",

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Images,
   LayoutDashboard,
@@ -39,15 +39,17 @@ const nav = [
 
 export function AdminNav({ email }: { email: string }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
 
   async function signOut() {
     setSigningOut(true);
     try {
       await fetch("/api/admin/logout", { method: "POST" });
-      router.replace("/admin/login");
-      router.refresh();
+      // Full navigation for the same reason as sign-in: a client-side
+      // transition can be issued before the browser commits the cleared
+      // cookie, leaving cached admin RSC payloads on screen.
+      window.location.assign("/admin/login");
+      return;
     } catch {
       toast.error("Could not sign out. Please try again.");
       setSigningOut(false);

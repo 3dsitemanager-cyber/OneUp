@@ -6,6 +6,7 @@ import { ContactForm } from "@/components/site/ContactForm";
 export const metadata: Metadata = {
   title: "Contact OneUp Gaming — Talk To The 3D Asset Team",
   description: "Reach the OneUp Gaming team for support, custom asset requests and partnerships.",
+  alternates: { canonical: "/contact" },
   openGraph: {
     title: "Contact OneUp Gaming",
     description: "Support, custom work and partnership enquiries.",

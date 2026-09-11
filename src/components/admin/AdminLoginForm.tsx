@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 export function AdminLoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next");
 
@@ -35,14 +34,26 @@ export function AdminLoginForm() {
       }
 
       // Only follow `next` when it is an in-app admin path — never an absolute URL.
-      const target = nextPath?.startsWith("/admin") ? nextPath : "/admin";
-      router.replace(target);
-      router.refresh();
+      // `//evil.com` also passes startsWith("/admin")'s cousin checks, so reject
+      // anything that could be read as protocol-relative.
+      const target =
+        nextPath?.startsWith("/admin") && !nextPath.startsWith("//") ? nextPath : "/admin";
+
+      // A full navigation, not router.replace + router.refresh.
+      //
+      // The session cookie is set by the response we just received. A client-side
+      // transition can race it: the RSC request for /admin is issued before the
+      // browser has committed the cookie, middleware sees no session, and bounces
+      // back to this page — which is why signing in used to take two attempts.
+      // A document navigation always carries the new cookie.
+      window.location.assign(target);
+      // Deliberately not clearing `submitting`: the page is on its way out, and
+      // re-enabling the button invites a second submit mid-navigation.
+      return;
     } catch {
       setError("Network error — check your connection and try again.");
-    } finally {
-      setSubmitting(false);
     }
+    setSubmitting(false);
   }
 
   return (

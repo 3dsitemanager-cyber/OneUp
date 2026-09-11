@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Asset Categories — OneUp Gaming 3D Marketplace",
   description:
     "Browse 3D asset categories: characters, weapons, vehicles, environments, props and creatures.",
+  alternates: { canonical: "/categories" },
   openGraph: {
     title: "Asset Categories — OneUp Gaming",
     description: "Find game-ready 3D assets by category.",
