@@ -44,12 +44,20 @@ export function SuccessView({
   const [seconds, setSeconds] = useState(PREPARE_SECONDS);
   const { clear } = useCart();
 
-  // Payment is confirmed by this point, so the cart has served its purpose.
+  // Reaching this page with a session_id means Stripe took the payment, so the
+  // cart has served its purpose — clear it now rather than waiting for the
+  // order, which arrives later (or not at all, if the webhook is misconfigured)
+  // and would otherwise leave paid-for items sitting in the cart.
+  //
   // Deliberately not cleared before redirecting to Stripe: a cancelled payment
   // should leave the buyer's cart intact.
   useEffect(() => {
-    if (order) clear();
-  }, [order, clear]);
+    const paid = order !== null || waiting || new URLSearchParams(window.location.search).has("session_id");
+    if (paid) clear();
+    // Runs once: `clear` is stable, and re-running on every order/waiting change
+    // would fight a buyer who adds something new while this page is open.
+
+  }, []);
 
   // Poll until the webhook lands. Gives up after ~30s rather than spinning
   // forever; the order still exists and is reachable from /downloads.
