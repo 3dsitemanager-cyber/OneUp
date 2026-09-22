@@ -1,7 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 
 export const SESSION_COOKIE = "oneupgaming_admin_session";
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8; // 8 hours
+// Short enough that a cookie stolen from a shared or unattended machine stops
+// working the same day, long enough not to interrupt a working session.
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 4; // 4 hours
 
 export type AdminSession = {
   sub: string;
@@ -45,8 +47,12 @@ export async function verifySessionToken(token: string | undefined): Promise<Adm
 }
 
 export const sessionCookieOptions = {
+  // Not readable from JavaScript, so an XSS bug cannot steal the session.
   httpOnly: true,
-  sameSite: "lax" as const,
+  // `strict` rather than `lax`: this cookie is never needed on a cross-site
+  // navigation — nothing legitimately links into the admin portal from
+  // elsewhere — and it closes the CSRF gap `lax` leaves open on top-level GETs.
+  sameSite: "strict" as const,
   secure: process.env.NODE_ENV === "production",
   path: "/",
   maxAge: SESSION_MAX_AGE_SECONDS,

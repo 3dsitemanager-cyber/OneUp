@@ -31,6 +31,9 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
 
 export function Footer() {
   const pathname = usePathname();
+  // See Navbar: the early return cannot stop a hook, so the fetch is disabled
+  // explicitly on admin routes where this footer never renders.
+  const isAdmin = pathname.startsWith("/admin");
 
   // Marketplace column is built from live categories that have listings.
   const { data: categories = [] } = useQuery({
@@ -41,6 +44,7 @@ export function Footer() {
       if (!res.ok || !json.ok) throw new Error(json.error ?? "Could not load categories");
       return json.data as Category[];
     },
+    enabled: !isAdmin,
     // Shares its cache entry with the header — see Navbar for why it stays fresh.
     staleTime: 0,
     refetchOnMount: "always",
@@ -59,7 +63,7 @@ export function Footer() {
 
   const allColumns = [marketplace, ...columns];
 
-  if (pathname.startsWith("/admin")) return null;
+  if (isAdmin) return null;
 
   return (
     <footer className="relative overflow-hidden" style={{ background: "var(--gradient-footer)" }}>

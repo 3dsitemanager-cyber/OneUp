@@ -95,7 +95,9 @@ export function AdminLoginForm() {
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin"
+                // No example username: a placeholder of "admin" told anyone who
+                // opened this page what to guess first.
+                placeholder="Username"
                 className="mt-2 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-brand"
               />
             </label>

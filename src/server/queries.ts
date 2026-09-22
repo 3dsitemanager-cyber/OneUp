@@ -231,7 +231,35 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     paymentAgg,
     windowAgg,
   ] = await Promise.all([
-    Product.find({ published: true }).select("slug name price sales").lean().exec(),
+    // Catalogue totals and the top-earning list, computed in Mongo rather than
+    // by pulling every product back to add up here. `top` is already ranked by
+    // earnings, so the page does not re-sort it.
+    Product.aggregate<{
+      totals: { liveAssets: number; downloads: number; catalogueRevenue: number }[];
+      top: { slug: string; name: string; value: number }[];
+    }>([
+      { $match: { published: true } },
+      { $addFields: { earned: { $multiply: ["$price", "$sales"] } } },
+      {
+        $facet: {
+          totals: [
+            {
+              $group: {
+                _id: null,
+                liveAssets: { $sum: 1 },
+                downloads: { $sum: "$sales" },
+                catalogueRevenue: { $sum: "$earned" },
+              },
+            },
+          ],
+          top: [
+            { $sort: { earned: -1 } },
+            { $limit: 5 },
+            { $project: { _id: 0, slug: 1, name: 1, value: "$earned" } },
+          ],
+        },
+      },
+    ]).exec(),
     Order.aggregate<{ _id: null; revenue: number }>([
       { $match: earning },
       { $group: { _id: null, revenue: { $sum: "$total" } } },
@@ -292,14 +320,11 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     ]).exec(),
   ]);
 
-  const rows = products.map((p) => {
-    const doc = p as Record<string, unknown>;
-    const price = typeof doc["price"] === "number" ? doc["price"] : 0;
-    const sales = typeof doc["sales"] === "number" ? doc["sales"] : 0;
-    return { slug: String(doc["slug"]), name: String(doc["name"]), value: price * sales, sales };
-  });
+  // $facet always returns one element; an empty catalogue leaves its arrays empty.
+  const facet = products[0];
+  const totals = facet?.totals?.[0] ?? { liveAssets: 0, downloads: 0, catalogueRevenue: 0 };
+  const topAssets = facet?.top ?? [];
 
-  const catalogueRevenue = rows.reduce((sum, r) => sum + r.value, 0);
   const liveRevenue = orderAgg[0]?.revenue ?? 0;
 
   // Days with no orders are absent from the aggregation but must still be
@@ -323,16 +348,14 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   return {
     // Real order revenue once orders exist; otherwise fall back to catalogue value
     // so a freshly seeded dashboard is not a wall of zeros.
-    revenue: liveRevenue > 0 ? liveRevenue : catalogueRevenue,
-    downloads: rows.reduce((sum, r) => sum + r.sales, 0),
-    liveAssets: rows.length,
+    revenue: liveRevenue > 0 ? liveRevenue : totals.catalogueRevenue,
+    downloads: totals.downloads,
+    liveAssets: totals.liveAssets,
     orderCount,
     unreadMessages,
     openComplaints,
-    topAssets: [...rows]
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5)
-      .map(({ slug, name, value }) => ({ slug, name, value })),
+    // Already ranked and capped by the aggregation.
+    topAssets,
 
     revenueSeries,
     categorySplit: categoryAgg.map((c) => ({

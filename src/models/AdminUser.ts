@@ -8,6 +8,12 @@ const AdminUserSchema = new Schema(
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: ["admin"], default: "admin" },
     lastLoginAt: { type: Date },
+
+    // Per-account lockout. The IP rate limit is in-memory and per-instance, so
+    // it resets on deploy and does nothing against a distributed attempt; this
+    // survives both because it lives in the database with the account.
+    failedAttempts: { type: Number, default: 0 },
+    lockedUntil: { type: Date, default: null },
   },
   { timestamps: true },
 );

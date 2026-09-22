@@ -51,8 +51,20 @@ async function seed() {
 
   const email = (process.env.ADMIN_EMAIL ?? "admin@oneupgaming.studio").toLowerCase();
   const password = process.env.ADMIN_PASSWORD;
-  if (!password || password.length < 8) {
-    throw new Error("ADMIN_PASSWORD must be set in .env.local and be at least 8 characters.");
+  if (!password) {
+    throw new Error("ADMIN_PASSWORD must be set in .env.local.");
+  }
+  // This account is the only thing between the internet and the whole admin
+  // portal, so it is worth refusing a weak one outright rather than warning.
+  if (password.length < 16) {
+    throw new Error(
+      "ADMIN_PASSWORD must be at least 16 characters. Generate one with:\n" +
+        '  node -e "console.log(require(\'crypto\').randomBytes(24).toString(\'base64url\'))"',
+    );
+  }
+  const weak = ["admin", "password", "123456", "qwerty", "letmein", "oneup"];
+  if (weak.some((w) => password.toLowerCase().includes(w))) {
+    throw new Error("ADMIN_PASSWORD contains a common word. Use a random string instead.");
   }
 
   const passwordHash = await bcrypt.hash(password, 12);

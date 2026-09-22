@@ -11,11 +11,18 @@ import { clientIp, rateLimit } from "@/server/rate-limit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** How many wrong passwords an account tolerates before it locks. */
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000;
+
+/** A valid bcrypt hash of a random value, for the dummy compare below. */
+const DUMMY_HASH = "$2a$12$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+
 /** POST /api/admin/login — issues the httpOnly admin session cookie. */
 export async function POST(request: NextRequest) {
   try {
-    // Password guessing is the obvious attack on this route, and bcrypt alone
-    // only makes each guess slow, not scarce. 10 attempts per 15 minutes.
+    // Two independent limits. This one is per-IP and in-memory: cheap, and it
+    // stops a single host hammering the endpoint.
     const limit = rateLimit(`login:${await clientIp()}`, 10, 15 * 60 * 1000);
     if (!limit.allowed) {
       return fail("Too many sign-in attempts. Please wait a few minutes.", 429);
@@ -31,13 +38,42 @@ export async function POST(request: NextRequest) {
     // Same message and a dummy compare either way, so response timing and wording
     // never reveal whether the email exists.
     if (!admin) {
-      await bcrypt.compare(password, "$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalid");
+      await bcrypt.compare(password, DUMMY_HASH);
       return fail("Invalid email or password.", 401);
     }
 
-    const valid = await bcrypt.compare(password, admin.passwordHash);
-    if (!valid) return fail("Invalid email or password.", 401);
+    // The second limit: per-account, stored in the database. Survives restarts
+    // and applies no matter how many addresses the attempts come from.
+    //
+    // The wording is deliberately generic. "Account locked" would confirm the
+    // username exists, which is exactly what an attacker probes for — the only
+    // difference a caller can see is that waiting eventually helps.
+    if (admin.lockedUntil && admin.lockedUntil.getTime() > Date.now()) {
+      // Still burn a compare so a locked account does not answer faster than a
+      // live one and become detectable by timing.
+      await bcrypt.compare(password, DUMMY_HASH);
+      return fail("Too many sign-in attempts. Please wait a few minutes.", 429);
+    }
 
+    const valid = await bcrypt.compare(password, admin.passwordHash);
+
+    if (!valid) {
+      const failed = (admin.failedAttempts ?? 0) + 1;
+      admin.failedAttempts = failed;
+      if (failed >= MAX_FAILED_ATTEMPTS) {
+        admin.lockedUntil = new Date(Date.now() + LOCKOUT_MS);
+        admin.failedAttempts = 0;
+      }
+      await admin.save();
+
+      // Deliberately the same message as an unknown account: telling an
+      // attacker they found a real username is half the work done for them.
+      return fail("Invalid email or password.", 401);
+    }
+
+    // A good password clears the counter and any expired lock.
+    admin.failedAttempts = 0;
+    admin.lockedUntil = null;
     admin.lastLoginAt = new Date();
     await admin.save();
 

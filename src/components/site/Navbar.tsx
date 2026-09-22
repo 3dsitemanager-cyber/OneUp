@@ -44,6 +44,12 @@ export function Navbar() {
     };
   }, [productsOpen]);
 
+  // The admin portal has its own chrome, so this header never renders there.
+  // Hooks cannot be skipped, so the early return below cannot prevent the fetch
+  // — `enabled` has to, or every admin page load would request categories for a
+  // menu nobody sees.
+  const isAdmin = pathname.startsWith("/admin");
+
   // Categories are admin-managed, so the submenu is fetched rather than hardcoded.
   // withProducts=1: only categories that actually have listings, with real counts.
   // Kept fresh rather than cached: the header persists across navigation, so a
@@ -56,13 +62,13 @@ export function Navbar() {
       if (!res.ok || !json.ok) throw new Error(json.error ?? "Could not load categories");
       return json.data as Category[];
     },
+    enabled: !isAdmin,
     staleTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });
 
-  // The admin portal has its own chrome — keep the storefront header out of it.
-  if (pathname.startsWith("/admin")) return null;
+  if (isAdmin) return null;
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);

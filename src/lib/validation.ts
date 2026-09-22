@@ -10,7 +10,10 @@ import {
 // is provisioned from ADMIN_EMAIL in .env.local rather than by self sign-up.
 export const adminLoginSchema = z.object({
   email: z.string().min(2, "Username is required").max(160),
-  password: z.string().min(1, "Password is required"),
+  // Capped rather than required-long: this validates a submitted password, not
+  // a chosen one, and a length rule here would tell an attacker how long the
+  // real password is. The cap stops a megabyte of input reaching bcrypt.
+  password: z.string().min(1, "Password is required").max(200),
 });
 
 export const contactSchema = z.object({
